@@ -6,6 +6,8 @@ import artemboldirew.obligi.dto.RefreshTokenDTO;
 import artemboldirew.obligi.dto.TokenPairDTO;
 import artemboldirew.obligi.entities.User;
 import artemboldirew.obligi.repositories.AuthRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.coyote.BadRequestException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,15 @@ public class AuthService {
 
     public AccessTokenDTO getAccessToken(RefreshTokenDTO refreshTokenDTO) {
         return jwtService.getAccessToken(refreshTokenDTO);
+    }
+
+    private void addHttpOnlyCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        //cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        response.addCookie(cookie);
     }
 
 

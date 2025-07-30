@@ -1,5 +1,6 @@
 package artemboldirew.obligi.services;
 
+import artemboldirew.obligi.dto.SafetyUserDTO;
 import artemboldirew.obligi.entities.User;
 import artemboldirew.obligi.repositories.UserRepository;
 import org.apache.coyote.BadRequestException;
@@ -15,12 +16,14 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User getUserById(Long id) throws BadRequestException {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isEmpty()) {
+    public SafetyUserDTO getUserById(Long id) throws BadRequestException {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
             throw new BadRequestException("User is not exist");
         }
-        return user.get();
+        User user = userOpt.get();
+        SafetyUserDTO userToClient = new SafetyUserDTO(user.getId(), user.getEmail(), user.getRole(), user.getCreatedAt());
+        return userToClient;
     }
 
 }

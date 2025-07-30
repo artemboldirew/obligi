@@ -1,5 +1,6 @@
 package artemboldirew.obligi.controllers;
 
+import artemboldirew.obligi.dto.SafetyUserDTO;
 import artemboldirew.obligi.entities.User;
 import artemboldirew.obligi.services.UserService;
 import org.apache.coyote.BadRequestException;
@@ -17,7 +18,7 @@ public class UserController {
 
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) throws BadRequestException {
+    public SafetyUserDTO getUserById(@PathVariable Long id) throws BadRequestException {
         return userService.getUserById(id);
     }
 }
