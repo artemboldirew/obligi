@@ -16,6 +16,11 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/hello")
+    public String hello() {
+        return "hello";
+    }
+
 
     @GetMapping("/{id}")
     public SafetyUserDTO getUserById(@PathVariable Long id) throws BadRequestException {

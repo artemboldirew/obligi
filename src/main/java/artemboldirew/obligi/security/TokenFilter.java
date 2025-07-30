@@ -5,6 +5,7 @@ import artemboldirew.obligi.repositories.AuthRepository;
 import artemboldirew.obligi.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,8 +31,17 @@ public class TokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
+            String token = null;
             // Извлекаем токен из запроса
-            String token = JwtService.getTokenFromRequest(request);
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("accessToken".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        System.out.println(token);
+                    }
+                }
+            }
 
             if (token != null) {
                 // Проверяем токен
@@ -42,8 +52,12 @@ public class TokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 // Добавляем данные токена (Claims) в контекст безопасности или объект запроса
             }
+            else {
+                // Обработка ошибок токена (например, отправляем 401 Unauthorized)
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
         } catch (Exception e) {
-            System.out.println("Токен не валиден");
             // Обработка ошибок токена (например, отправляем 401 Unauthorized)
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(e.getMessage());

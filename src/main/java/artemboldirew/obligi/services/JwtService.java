@@ -22,22 +22,28 @@ public class JwtService {
     @Value("${jwt.secret.access}")
     private String accessKey;
 
+    @Value("${jwt.expiration.access}")
+    private Long accessExpiration;
+
     @Value("${jwt.secret.refresh}")
     private String refreshKey;
 
-    private final AuthRepository authRepository;
+    @Value("${jwt.expiration.refresh}")
+    private Long refreshExpiration;
 
-    public JwtService(AuthRepository authRepository) {
+    private final AuthRepository authRepository;
+    private final CookieService cookieService;
+
+    public JwtService(AuthRepository authRepository, CookieService cookieService) {
         this.authRepository = authRepository;
+        this.cookieService = cookieService;
     }
 
     public TokenPairDTO getTokens(Long id) {
-//        Map<String, Long> payload  = new HashMap<>();
-//        payload.put("id", id);
         SecretKey accessSecret = Keys.hmacShaKeyFor(accessKey.getBytes());
         SecretKey refreshSecret = Keys.hmacShaKeyFor(refreshKey.getBytes());
-        String accessToken = Jwts.builder().subject(String.valueOf(id)).expiration(new Date(System.currentTimeMillis() + 86400000)).signWith(accessSecret, Jwts.SIG.HS256).compact();
-        String refreshToken = Jwts.builder().subject(String.valueOf(id)).expiration(new Date(System.currentTimeMillis() + 1209600000)).signWith(refreshSecret, Jwts.SIG.HS256).compact();
+        String accessToken = Jwts.builder().subject(String.valueOf(id)).expiration(new Date(System.currentTimeMillis() + accessExpiration * 1000)).signWith(accessSecret, Jwts.SIG.HS256).compact();
+        String refreshToken = Jwts.builder().subject(String.valueOf(id)).expiration(new Date(System.currentTimeMillis() + refreshExpiration * 1000)).signWith(refreshSecret, Jwts.SIG.HS256).compact();
         return new TokenPairDTO(accessToken, refreshToken);
     }
 
@@ -105,11 +111,4 @@ public class JwtService {
         }
     }
 
-    public static String getTokenFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // Убираем "Bearer "
-        }
-        return null;
-    }
 }

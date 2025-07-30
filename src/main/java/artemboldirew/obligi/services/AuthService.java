@@ -25,7 +25,7 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenPairDTO login(LoginDTO dto) throws BadRequestException {
+    public void login(LoginDTO dto, HttpServletResponse response) throws BadRequestException {
         BCryptPasswordEncoder bc = new BCryptPasswordEncoder(12);
         String email = dto.getEmail();
         String password = dto.getPassword();
@@ -38,11 +38,12 @@ public class AuthService {
             throw new BadRequestException("Bad password");
         }
         TokenPairDTO tokens = jwtService.getTokens(user.getId());
+        addHttpOnlyCookie(response, "accessToken", tokens.getAccessToken(), 24 * 60 * 60);
+        addHttpOnlyCookie(response, "refreshToken", tokens.getRefreshToken(), 24 * 60 * 60 * 30);
         user.setRefreshToken(tokens.getRefreshToken());
-        return tokens;
     }
     @Transactional
-    public TokenPairDTO signUp(LoginDTO dto) throws BadRequestException {
+    public void signUp(LoginDTO dto, HttpServletResponse response) throws BadRequestException {
         BCryptPasswordEncoder bc = new BCryptPasswordEncoder(12);
         String email = dto.getEmail();
         String password = dto.getPassword();
@@ -53,13 +54,21 @@ public class AuthService {
         String hash = bc.encode(password);
         User user = new User(email, hash);
         TokenPairDTO tokens = jwtService.getTokens(user.getId());
+        addHttpOnlyCookie(response, "accessToken", tokens.getAccessToken(), 24 * 60 * 60);
+        addHttpOnlyCookie(response, "refreshToken", tokens.getRefreshToken(), 24 * 60 * 60 * 30);
         user.setRefreshToken(tokens.getRefreshToken());
         authRepository.save(user);
-        return tokens;
+        //return tokens;
     }
 
-    public AccessTokenDTO getAccessToken(RefreshTokenDTO refreshTokenDTO) {
-        return jwtService.getAccessToken(refreshTokenDTO);
+    public AccessTokenDTO getAccessToken(HttpServletResponse response) {
+        AccessTokenDTO accessToken = jwtService.getAccessToken(refreshTokenDTO);
+        addHttpOnlyCookie(response, "accessToken", accessToken.getAccessToken(), 24 * 60 * 60);
+    }
+
+    public void signOut(HttpServletResponse response) {
+        addHttpOnlyCookie(response, "accessToken", null, 0);
+        addHttpOnlyCookie(response, "refreshToken", null, 0);
     }
 
     private void addHttpOnlyCookie(HttpServletResponse response, String name, String value, int maxAge) {
